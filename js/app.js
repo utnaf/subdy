@@ -293,6 +293,31 @@
   }
   requestAnimationFrame(renderFrame);
 
+  // ---- Screen Wake Lock (keep the screen on while playing) ----
+
+  let wakeLock = null;
+
+  async function requestWakeLock() {
+    if (!("wakeLock" in navigator)) return;
+    try {
+      wakeLock = await navigator.wakeLock.request("screen");
+      wakeLock.addEventListener("release", () => { wakeLock = null; });
+    } catch (err) {
+      wakeLock = null;
+    }
+  }
+
+  function releaseWakeLock() {
+    if (wakeLock) wakeLock.release();
+    wakeLock = null;
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && isPlaying && !wakeLock) {
+      requestWakeLock();
+    }
+  });
+
   function start() {
     if (isPlaying) return;
     if (!validateSelection()) return;
@@ -317,6 +342,7 @@
     els.playBtn.textContent = "■ Stop";
     els.playBtn.classList.add("is-playing");
     scheduler();
+    requestWakeLock();
   }
 
   function stop() {
@@ -330,6 +356,7 @@
     els.nextBlock.classList.remove("visible");
     [...els.barDots.children].forEach(dot => dot.classList.remove("active"));
     uiQueue.length = 0;
+    releaseWakeLock();
   }
 
   function toggle() {
