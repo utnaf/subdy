@@ -19,7 +19,7 @@
 <div class="app">
 
   <header class="app__header">
-    <h1>subdy <span class="app__version">v0.3.3</span></h1>
+    <h1>subdy <span class="app__version">v0.4.0</span></h1>
     <p class="app__tagline">allenati sulle suddivisioni</p>
   </header>
 
@@ -45,6 +45,16 @@
     </button>
     <button id="tapBtn" class="btn" type="button">Tap tempo</button>
   </section>
+
+  <section class="subdivisions">
+    <div class="subdivisions__head">
+      <span class="subdivisions__title">Suddivisioni</span>
+      <span class="subdivisions__meta" id="subdivisionsMeta"></span>
+    </div>
+    <div class="subdivisions__list" id="subdivisionsList"></div>
+  </section>
+
+  <p class="hint" id="hint"></p>
 
   <section class="controls">
 
@@ -76,21 +86,6 @@
     </div>
 
   </section>
-
-  <section class="subdivisions">
-    <div class="accordion">
-      <button type="button" class="accordion__trigger" id="subdivisionsTrigger" aria-expanded="false" aria-controls="subdivisionsPanel">
-        <span>Suddivisioni</span>
-        <span class="accordion__meta" id="subdivisionsMeta"></span>
-        <span class="accordion__chevron" aria-hidden="true">⌄</span>
-      </button>
-      <div class="accordion__panel" id="subdivisionsPanel" hidden>
-        <div class="subdivisions__list" id="subdivisionsList"></div>
-      </div>
-    </div>
-  </section>
-
-  <p class="hint" id="hint"></p>
 
   <footer class="app__footer">
     <script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="utnaf" data-color="#34d399" data-emoji="🍺" data-font="Cookie" data-text="Buy me a beer" data-outline-color="#06251a" data-font-color="#06251a" data-coffee-color="#ffffff"></script>

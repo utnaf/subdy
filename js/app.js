@@ -86,13 +86,53 @@
     nextIcon: document.getElementById("nextIcon"),
     nextName: document.getElementById("nextName"),
     subdivisionsList: document.getElementById("subdivisionsList"),
-    subdivisionsTrigger: document.getElementById("subdivisionsTrigger"),
-    subdivisionsPanel: document.getElementById("subdivisionsPanel"),
     subdivisionsMeta: document.getElementById("subdivisionsMeta"),
     hint: document.getElementById("hint"),
   };
 
-  const enabled = new Set(DEFAULT_ENABLED);
+  // ---- Settings persistence (localStorage) ----
+
+  const STORAGE_KEY = "subdy:settings";
+
+  function loadStoredSettings() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function saveSettings() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        bpm,
+        beatsPerBar,
+        barsPerChange,
+        subdivisions: [...enabled],
+      }));
+    } catch {
+      // localStorage unavailable (private mode, quota, ...) — non-fatal
+    }
+  }
+
+  const stored = loadStoredSettings();
+
+  if (stored) {
+    if (Number.isFinite(stored.bpm)) els.bpmInput.value = stored.bpm;
+    if (Number.isFinite(stored.beatsPerBar)) els.beatsInput.value = stored.beatsPerBar;
+    if (Number.isFinite(stored.barsPerChange) && [1, 2, 4, 8].includes(stored.barsPerChange)) {
+      els.barsInput.value = String(stored.barsPerChange);
+    }
+  }
+
+  const storedSubdivisions = stored && Array.isArray(stored.subdivisions)
+    ? stored.subdivisions.filter(id => SUBDIVISIONS.some(s => s.id === id))
+    : [];
+
+  const enabled = new Set(storedSubdivisions.length ? storedSubdivisions : DEFAULT_ENABLED);
 
   function buildSubdivisionList() {
     SUBDIVISIONS.forEach(sub => {
@@ -109,6 +149,7 @@
         else enabled.delete(sub.id);
         updateSubdivisionsMeta();
         validateSelection();
+        saveSettings();
       });
 
       const icon = document.createElement("span");
@@ -129,12 +170,6 @@
   function updateSubdivisionsMeta() {
     els.subdivisionsMeta.textContent = `${enabled.size} selezionate`;
   }
-
-  els.subdivisionsTrigger.addEventListener("click", () => {
-    const isOpen = els.subdivisionsTrigger.getAttribute("aria-expanded") === "true";
-    els.subdivisionsTrigger.setAttribute("aria-expanded", String(!isOpen));
-    els.subdivisionsPanel.hidden = isOpen;
-  });
 
   function validateSelection() {
     if (enabled.size === 0) {
@@ -380,6 +415,7 @@
     bpm = clamp(v, 30, 300);
     els.bpmInput.value = bpm;
     els.bpmRange.value = bpm;
+    saveSettings();
   }
 
   els.bpmInput.addEventListener("input", () => setBpm(parseInt(els.bpmInput.value, 10)));
@@ -417,11 +453,13 @@
     els.beatsInput.value = beatsPerBar;
     dotsBuilt = -1;
     if (isPlaying) resetBlockState();
+    saveSettings();
   });
 
   els.barsInput.addEventListener("change", () => {
     barsPerChange = parseInt(els.barsInput.value, 10);
     if (isPlaying) resetBlockState();
+    saveSettings();
   });
 
 })();

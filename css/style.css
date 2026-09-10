@@ -289,56 +289,26 @@ html, body {
 }
 
 .subdivisions {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.accordion {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  overflow: hidden;
+  padding: 14px;
 }
 
-.accordion__trigger {
-  width: 100%;
+.subdivisions__head {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 14px;
-  background: none;
-  border: none;
-  color: var(--text);
   font-size: 0.95rem;
   font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  text-align: left;
+  margin-bottom: 10px;
 }
 
-.accordion__trigger:hover {
-  background: var(--surface-2);
-}
-
-.accordion__meta {
+.subdivisions__meta {
   margin-left: auto;
   color: var(--text-dim);
   font-weight: 400;
   font-size: 0.85rem;
-}
-
-.accordion__chevron {
-  transition: transform 0.15s ease;
-  color: var(--text-dim);
-}
-
-.accordion__trigger[aria-expanded="true"] .accordion__chevron {
-  transform: rotate(180deg);
-}
-
-.accordion__panel {
-  padding: 0 14px 14px;
 }
 
 .subdivisions__list {
