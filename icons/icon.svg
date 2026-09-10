@@ -1,9 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <rect width="512" height="512" rx="115" fill="#14161c"/>
-  <line x1="217.5" y1="330" x2="217.5" y2="120" stroke="#34d399" stroke-width="17" stroke-linecap="round"/>
-  <line x1="369.5" y1="330" x2="369.5" y2="120" stroke="#34d399" stroke-width="17" stroke-linecap="round"/>
-  <rect x="217.5" y="120" width="152" height="23" rx="6" fill="#34d399"/>
-  <rect x="217.5" y="154" width="152" height="23" rx="6" fill="#34d399"/>
-  <ellipse cx="180" cy="340" rx="42" ry="31" fill="#34d399" transform="rotate(-18 180 340)"/>
-  <ellipse cx="332" cy="340" rx="42" ry="31" fill="#34d399" transform="rotate(-18 332 340)"/>
+  <g transform="translate(256,256) scale(3.2) translate(-65.504,-26.43)" fill="#34d399">
+    <line x1="21.504" y1="44" x2="21.504" y2="18" stroke="#34d399" stroke-width="2.4" stroke-linecap="butt"/>
+    <line x1="65.504" y1="44" x2="65.504" y2="18" stroke="#34d399" stroke-width="2.4" stroke-linecap="butt"/>
+    <line x1="109.504" y1="44" x2="109.504" y2="18" stroke="#34d399" stroke-width="2.4" stroke-linecap="butt"/>
+    <rect x="21.504" y="18" width="88" height="3.6" rx="1"/>
+    <ellipse cx="16" cy="46" rx="6.4" ry="4.672" transform="rotate(-18 16 46)"/>
+    <ellipse cx="60" cy="46" rx="6.4" ry="4.672" transform="rotate(-18 60 46)"/>
+    <ellipse cx="104" cy="46" rx="6.4" ry="4.672" transform="rotate(-18 104 46)"/>
+    <text x="65.504" y="13" font-size="14" text-anchor="middle" font-style="italic" font-family="Georgia, serif">3</text>
+  </g>
 </svg>
