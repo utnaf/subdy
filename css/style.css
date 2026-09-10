@@ -387,8 +387,11 @@ input[type="checkbox"] {
   text-align: center;
   color: var(--danger);
   font-size: 0.85rem;
-  min-height: 1.2em;
   margin: 0;
+}
+
+.hint:not(:empty) {
+  margin-top: 10px;
 }
 
 @media (prefers-color-scheme: light) {
