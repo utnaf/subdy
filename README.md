@@ -1,29 +1,31 @@
-# Subdy
+# subdy
 
-Un metronomo specializzato per allenare le suddivisioni ritmiche. Batte il tempo normale (i quarti) e, in anticipo, ti dice quale suddivisione suonare nel blocco di battute successivo.
+A metronome built specifically for practicing rhythmic subdivisions. It keeps a normal quarter-note click, and ahead of time tells you which subdivision to play over the next block of bars.
 
-Nessuna build, nessuna dipendenza: solo HTML, CSS e JS vanilla, pensato per girare su GitHub Pages.
+No build step, no runtime dependencies: plain HTML, CSS and JS, made to run on GitHub Pages.
 
-## Uso in locale
+## How it works
 
-Serve una qualsiasi web server statico (serve per via del `fetch`/moduli non usati qui, ma è buona norma evitare `file://` per l'AudioContext su alcuni browser):
+- Set the tempo (BPM), beats per bar, and how many bars make up a block (1, 2, 4 or 8) before the required subdivision changes.
+- Pick which subdivisions can be requested — quarters, quarter-note triplets, eighths, eighth-note triplets, sixteenths, quintuplets, sextuplets, septuplets, thirty-seconds — each toggled individually in a collapsible list. Defaults to quarters, eighths and sixteenths.
+- Press Start (or hit space): the metronome clicks only the quarter notes (accented on beat one), while the screen shows the subdivision required "now" for the current block and, one bar ahead, the "next" one.
+- Each subdivision is shown as a small stylized rhythm-notation icon (stem, beam(s), tuplet number where relevant), rendered as inline SVG — no image assets to load.
+
+## Local development
+
+Requires Node (see `.nvmrc`; `nvm use` picks the right version).
 
 ```bash
-python3 -m http.server 8000
+npm install
+npm run dev
 ```
 
-Poi apri `http://localhost:8000`.
+Then open `http://localhost:8000`.
 
-## Come funziona
-
-- Imposta BPM, battiti per battuta e ogni quante battute cambiare suddivisione ("blocco").
-- Seleziona quali suddivisioni vuoi che vengano richieste (set base, set esteso, o una selezione personalizzata).
-- Premi Start (o barra spaziatrice): il metronomo suona solo i quarti (accento sul primo battito), mentre a schermo vedi la suddivisione "ora" richiesta per il blocco corrente e, con una battuta di anticipo, la "prossima".
-
-## Deploy su GitHub Pages
+## Deploying to GitHub Pages
 
 Repo: https://github.com/utnaf/subdy
 
-1. Push su `main`.
+1. Push to `main`.
 2. Settings → Pages → Build and deployment → Deploy from a branch → `main` / `/(root)`.
-3. L'app sarà disponibile su `https://utnaf.github.io/subdy/`.
+3. The app will be live at `https://utnaf.github.io/subdy/`.
