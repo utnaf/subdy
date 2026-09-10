@@ -230,6 +230,13 @@ html, body {
   font-size: 1.2rem;
 }
 
+.btn--tap {
+  width: 100%;
+  padding: 8px;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
 .controls {
   display: flex;
   flex-direction: column;
