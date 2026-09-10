@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Subdy — metronomo per suddivisioni</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="app__header">
+    <h1>Subdy</h1>
+    <p class="app__tagline">allenati sulle suddivisioni</p>
+  </header>
+
+  <main class="display" id="display">
+    <div class="display__bar-dots" id="barDots" aria-hidden="true"></div>
+
+    <div class="display__now">
+      <span class="display__label">ora</span>
+      <span class="display__symbol" id="nowSymbol">—</span>
+      <span class="display__name" id="nowName">pronto</span>
+    </div>
+
+    <div class="display__next" id="nextBlock">
+      <span class="display__label">prossima</span>
+      <span class="display__name" id="nextName">—</span>
+    </div>
+  </main>
+
+  <section class="transport">
+    <button id="playBtn" class="btn btn--primary" type="button">▶ Start</button>
+    <button id="tapBtn" class="btn" type="button">Tap tempo</button>
+  </section>
+
+  <section class="controls">
+
+    <div class="control">
+      <label for="bpmInput">Tempo (BPM)</label>
+      <div class="control__row">
+        <button id="bpmDown" class="btn btn--small" type="button" aria-label="Diminuisci BPM">−</button>
+        <input type="number" id="bpmInput" min="30" max="300" value="90">
+        <button id="bpmUp" class="btn btn--small" type="button" aria-label="Aumenta BPM">+</button>
+      </div>
+      <input type="range" id="bpmRange" min="30" max="300" value="90">
+    </div>
+
+    <div class="control">
+      <label for="beatsInput">Battiti per battuta</label>
+      <input type="number" id="beatsInput" min="1" max="12" value="4">
+    </div>
+
+    <div class="control">
+      <label for="barsInput">Cambia suddivisione ogni</label>
+      <select id="barsInput">
+        <option value="1">1 battuta</option>
+        <option value="2" selected>2 battute</option>
+        <option value="4">4 battute</option>
+        <option value="8">8 battute</option>
+      </select>
+    </div>
+
+    <div class="control">
+      <label>Volume click</label>
+      <input type="range" id="volumeInput" min="0" max="1" step="0.01" value="0.6">
+    </div>
+
+  </section>
+
+  <section class="subdivisions">
+    <div class="subdivisions__group" id="groupBase">
+      <div class="subdivisions__group-head">
+        <label><input type="checkbox" id="toggleBase" checked> Set base</label>
+      </div>
+      <div class="subdivisions__list" id="listBase"></div>
+    </div>
+
+    <div class="subdivisions__group" id="groupEsteso">
+      <div class="subdivisions__group-head">
+        <label><input type="checkbox" id="toggleEsteso"> Set esteso</label>
+      </div>
+      <div class="subdivisions__list" id="listEsteso"></div>
+    </div>
+  </section>
+
+  <p class="hint" id="hint"></p>
+
+  <footer class="app__footer">
+    <span>spazio = play/stop</span>
+  </footer>
+
+</div>
+<script src="js/app.js"></script>
+</body>
+</html>
