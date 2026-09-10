@@ -70,6 +70,7 @@
 
   const els = {
     playBtn: document.getElementById("playBtn"),
+    playBtnLabel: document.getElementById("playBtnLabel"),
     tapBtn: document.getElementById("tapBtn"),
     bpmInput: document.getElementById("bpmInput"),
     bpmRange: document.getElementById("bpmRange"),
@@ -339,7 +340,7 @@
 
     nextNoteTime = audioCtx.currentTime + 0.05;
     isPlaying = true;
-    els.playBtn.textContent = "■ Stop";
+    els.playBtnLabel.textContent = "■ Stop";
     els.playBtn.classList.add("is-playing");
     scheduler();
     requestWakeLock();
@@ -349,7 +350,7 @@
     if (!isPlaying) return;
     isPlaying = false;
     clearTimeout(schedulerId);
-    els.playBtn.textContent = "▶ Start";
+    els.playBtnLabel.textContent = "▶ Start";
     els.playBtn.classList.remove("is-playing");
     els.nowIcon.innerHTML = "";
     els.nowName.textContent = "pronto";
