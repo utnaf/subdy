@@ -112,9 +112,32 @@ html, body {
   color: var(--text-dim);
 }
 
-.display__symbol {
-  font-size: 3rem;
-  line-height: 1.1;
+.display__icon {
+  display: block;
+  color: var(--text);
+}
+
+.display__icon svg {
+  display: block;
+}
+
+.display__icon--now {
+  min-height: 80px;
+}
+
+.display__icon--now svg {
+  width: 150px;
+  height: auto;
+}
+
+.display__icon--next {
+  min-height: 48px;
+  color: var(--accent);
+}
+
+.display__icon--next svg {
+  width: 90px;
+  height: auto;
 }
 
 .display__name {
@@ -192,6 +215,12 @@ html, body {
 }
 
 .controls {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.controls__row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
@@ -249,38 +278,117 @@ html, body {
   gap: 14px;
 }
 
-.subdivisions__group {
+.accordion {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px;
+  overflow: hidden;
 }
 
-.subdivisions__group-head label {
-  font-weight: 600;
-  font-size: 0.95rem;
+.accordion__trigger {
+  width: 100%;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  padding: 14px;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.accordion__trigger:hover {
+  background: var(--surface-2);
+}
+
+.accordion__meta {
+  margin-left: auto;
+  color: var(--text-dim);
+  font-weight: 400;
+  font-size: 0.85rem;
+}
+
+.accordion__chevron {
+  transition: transform 0.15s ease;
+  color: var(--text-dim);
+}
+
+.accordion__trigger[aria-expanded="true"] .accordion__chevron {
+  transform: rotate(180deg);
+}
+
+.accordion__panel {
+  padding: 0 14px 14px;
 }
 
 .subdivisions__list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 8px 12px;
-  margin-top: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 10px;
+  margin-top: 4px;
 }
 
-.subdivisions__list label {
+.subdiv-tile {
+  position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
-  color: var(--text-dim);
+  gap: 4px;
+  padding: 10px 6px 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.subdivisions__list input:checked + span {
+.subdiv-tile:hover {
+  border-color: var(--text-dim);
+}
+
+.subdiv-tile__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.subdiv-tile__icon {
+  color: var(--text-dim);
+  transition: color 0.15s ease;
+}
+
+.subdiv-tile__icon svg {
+  display: block;
+  width: 52px;
+  height: auto;
+}
+
+.subdiv-tile__name {
+  font-size: 0.72rem;
+  text-align: center;
+  color: var(--text-dim);
+  line-height: 1.2;
+}
+
+.subdiv-tile__input:checked ~ .subdiv-tile__icon,
+.subdiv-tile__input:checked ~ .subdiv-tile__name {
   color: var(--text);
+}
+
+.subdiv-tile:has(.subdiv-tile__input:checked) {
+  background: rgba(110, 231, 183, 0.12);
+  border-color: var(--accent-strong);
+}
+
+.subdiv-tile__input:focus-visible ~ .subdiv-tile__icon {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 input[type="checkbox"] {

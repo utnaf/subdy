@@ -2,17 +2,71 @@
   "use strict";
 
   const SUBDIVISIONS = [
-    { id: "quarters", label: "Quarti", symbol: "♩", group: "base", perBeat: 1 },
-    { id: "eighths", label: "Ottavi", symbol: "♪ ♪", group: "base", perBeat: 2 },
-    { id: "triplets", label: "Terzine", symbol: "♪♪♪³", group: "base", perBeat: 3 },
-    { id: "sixteenths", label: "Sedicesimi", symbol: "♬", group: "base", perBeat: 4 },
-    { id: "dotted-ei-si", label: "Ottavo punt. + sedicesimo", symbol: "♩. ♬", group: "esteso", perBeat: 2 },
-    { id: "si-dotted-ei", label: "Sedicesimo + ottavo punt.", symbol: "♬ ♩.", group: "esteso", perBeat: 2 },
-    { id: "quintuplets", label: "Quintine", symbol: "♪⁵", group: "esteso", perBeat: 5 },
-    { id: "sextuplets", label: "Sestine", symbol: "♪⁶", group: "esteso", perBeat: 6 },
-    { id: "septuplets", label: "Settimine", symbol: "♪⁷", group: "esteso", perBeat: 7 },
-    { id: "thirtyseconds", label: "Trentaduesimi", symbol: "♬♬", group: "esteso", perBeat: 8 },
+    { id: "quarters", label: "Quarti", perBeat: 1, notation: { count: 1, beams: 0, tuplet: null } },
+    { id: "quarter-triplets", label: "Terzine di quarti", perBeat: 1.5, notation: { count: 3, beams: 0, tuplet: 3 } },
+    { id: "eighths", label: "Ottavi", perBeat: 2, notation: { count: 2, beams: 1, tuplet: null } },
+    { id: "eighth-triplets", label: "Terzine di ottavi", perBeat: 3, notation: { count: 3, beams: 1, tuplet: 3 } },
+    { id: "sixteenths", label: "Sedicesimi", perBeat: 4, notation: { count: 4, beams: 2, tuplet: null } },
+    { id: "quintuplets", label: "Quintine", perBeat: 5, notation: { count: 5, beams: 2, tuplet: 5 } },
+    { id: "sextuplets", label: "Sestine", perBeat: 6, notation: { count: 6, beams: 2, tuplet: 6 } },
+    { id: "septuplets", label: "Settimine", perBeat: 7, notation: { count: 7, beams: 2, tuplet: 7 } },
+    { id: "thirtyseconds", label: "Trentaduesimi", perBeat: 8, notation: { count: 8, beams: 3, tuplet: null } },
   ];
+
+  const DEFAULT_ENABLED = ["quarters", "eighths", "sixteenths"];
+
+  // ---- Stylized rhythm-notation icons (inline SVG, currentColor) ----
+
+  function buildNoteIcon({ count, beams, tuplet }) {
+    const W = 120, H = 64;
+    const marginX = 16;
+    const noteY = 46;
+    const beamTopY = 14;
+    const beamGap = 5.5;
+    const stemX = x => x + 5.5;
+
+    const xs = count === 1
+      ? [W / 2 - 5.5]
+      : Array.from({ length: count }, (_, i) => marginX + (i * (W - marginX * 2)) / (count - 1));
+
+    let svg = `<svg viewBox="0 0 ${W} ${H}" class="note-icon" aria-hidden="true">`;
+
+    xs.forEach(x => {
+      svg += `<line x1="${stemX(x)}" y1="${noteY - 2}" x2="${stemX(x)}" y2="${beamTopY}" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>`;
+    });
+
+    if (beams > 0 && xs.length > 1) {
+      const x1 = stemX(xs[0]);
+      const x2 = stemX(xs[xs.length - 1]);
+      for (let b = 0; b < beams; b++) {
+        svg += `<rect x="${x1}" y="${beamTopY + b * beamGap}" width="${x2 - x1}" height="3.6" rx="1" fill="currentColor"/>`;
+      }
+    }
+
+    xs.forEach(x => {
+      svg += `<ellipse cx="${x}" cy="${noteY}" rx="6.4" ry="4.7" fill="currentColor" transform="rotate(-18 ${x} ${noteY})"/>`;
+    });
+
+    if (tuplet) {
+      const midX = (stemX(xs[0]) + stemX(xs[xs.length - 1])) / 2;
+      if (beams > 0) {
+        svg += `<text x="${midX}" y="${beamTopY - 4}" font-size="14" text-anchor="middle" fill="currentColor" font-style="italic" font-family="Georgia, serif">${tuplet}</text>`;
+      } else {
+        const x1 = xs[0], x2 = xs[xs.length - 1];
+        const y = beamTopY;
+        svg += `<line x1="${x1}" y1="${y + 6}" x2="${x1}" y2="${y}" stroke="currentColor" stroke-width="1.6"/>`;
+        svg += `<line x1="${x1}" y1="${y}" x2="${midX - 7}" y2="${y}" stroke="currentColor" stroke-width="1.6"/>`;
+        svg += `<line x1="${midX + 7}" y1="${y}" x2="${x2}" y2="${y}" stroke="currentColor" stroke-width="1.6"/>`;
+        svg += `<line x1="${x2}" y1="${y}" x2="${x2}" y2="${y + 6}" stroke="currentColor" stroke-width="1.6"/>`;
+        svg += `<text x="${midX}" y="${y + 4}" font-size="12" text-anchor="middle" fill="currentColor" font-style="italic" font-family="Georgia, serif">${tuplet}</text>`;
+      }
+    }
+
+    svg += `</svg>`;
+    return svg;
+  }
+
+  SUBDIVISIONS.forEach(sub => { sub.icon = buildNoteIcon(sub.notation); });
 
   const els = {
     playBtn: document.getElementById("playBtn"),
@@ -23,64 +77,63 @@
     bpmUp: document.getElementById("bpmUp"),
     beatsInput: document.getElementById("beatsInput"),
     barsInput: document.getElementById("barsInput"),
-    volumeInput: document.getElementById("volumeInput"),
     display: document.getElementById("display"),
     barDots: document.getElementById("barDots"),
-    nowSymbol: document.getElementById("nowSymbol"),
+    nowIcon: document.getElementById("nowIcon"),
     nowName: document.getElementById("nowName"),
     nextBlock: document.getElementById("nextBlock"),
+    nextIcon: document.getElementById("nextIcon"),
     nextName: document.getElementById("nextName"),
-    listBase: document.getElementById("listBase"),
-    listEsteso: document.getElementById("listEsteso"),
-    toggleBase: document.getElementById("toggleBase"),
-    toggleEsteso: document.getElementById("toggleEsteso"),
+    subdivisionsList: document.getElementById("subdivisionsList"),
+    subdivisionsTrigger: document.getElementById("subdivisionsTrigger"),
+    subdivisionsPanel: document.getElementById("subdivisionsPanel"),
+    subdivisionsMeta: document.getElementById("subdivisionsMeta"),
     hint: document.getElementById("hint"),
   };
 
-  const enabled = new Set(SUBDIVISIONS.filter(s => s.group === "base").map(s => s.id));
+  const enabled = new Set(DEFAULT_ENABLED);
 
-  function buildSubdivisionLists() {
+  function buildSubdivisionList() {
     SUBDIVISIONS.forEach(sub => {
-      const container = sub.group === "base" ? els.listBase : els.listEsteso;
-      const label = document.createElement("label");
+      const tile = document.createElement("label");
+      tile.className = "subdiv-tile";
+
       const cb = document.createElement("input");
       cb.type = "checkbox";
+      cb.className = "subdiv-tile__input";
       cb.checked = enabled.has(sub.id);
       cb.dataset.id = sub.id;
       cb.addEventListener("change", () => {
         if (cb.checked) enabled.add(sub.id);
         else enabled.delete(sub.id);
-        syncGroupToggle(sub.group);
+        updateSubdivisionsMeta();
         validateSelection();
       });
-      const span = document.createElement("span");
-      span.textContent = `${sub.symbol} ${sub.label}`;
-      label.appendChild(cb);
-      label.appendChild(span);
-      container.appendChild(label);
+
+      const icon = document.createElement("span");
+      icon.className = "subdiv-tile__icon";
+      icon.innerHTML = sub.icon;
+
+      const name = document.createElement("span");
+      name.className = "subdiv-tile__name";
+      name.textContent = sub.label;
+
+      tile.appendChild(cb);
+      tile.appendChild(icon);
+      tile.appendChild(name);
+      els.subdivisionsList.appendChild(tile);
     });
   }
 
-  function syncGroupToggle(group) {
-    const ids = SUBDIVISIONS.filter(s => s.group === group).map(s => s.id);
-    const checkedCount = ids.filter(id => enabled.has(id)).length;
-    const toggle = group === "base" ? els.toggleBase : els.toggleEsteso;
-    toggle.checked = checkedCount === ids.length;
-    toggle.indeterminate = checkedCount > 0 && checkedCount < ids.length;
+  function updateSubdivisionsMeta() {
+    els.subdivisionsMeta.textContent = `${enabled.size} selezionate`;
   }
 
-  function setGroup(group, checked) {
-    SUBDIVISIONS.filter(s => s.group === group).forEach(s => {
-      if (checked) enabled.add(s.id);
-      else enabled.delete(s.id);
-    });
-    const container = group === "base" ? els.listBase : els.listEsteso;
-    container.querySelectorAll("input[type=checkbox]").forEach(cb => { cb.checked = checked; });
-    validateSelection();
-  }
-
-  els.toggleBase.addEventListener("change", () => setGroup("base", els.toggleBase.checked));
-  els.toggleEsteso.addEventListener("change", () => setGroup("esteso", els.toggleEsteso.checked));
+  els.subdivisionsTrigger.addEventListener("click", () => {
+    const isOpen = els.subdivisionsTrigger.getAttribute("aria-expanded") === "true";
+    els.subdivisionsTrigger.setAttribute("aria-expanded", String(!isOpen));
+    els.subdivisionsPanel.hidden = isOpen;
+  });
 
   function validateSelection() {
     if (enabled.size === 0) {
@@ -91,7 +144,8 @@
     return true;
   }
 
-  buildSubdivisionLists();
+  buildSubdivisionList();
+  updateSubdivisionsMeta();
   validateSelection();
 
   // ---- Metronome engine ----
@@ -104,6 +158,7 @@
 
   const LOOKAHEAD_MS = 25;
   const SCHEDULE_AHEAD_S = 0.12;
+  const DEFAULT_CLICK_VOLUME = 0.6;
 
   let bpm = clamp(parseInt(els.bpmInput.value, 10), 30, 300);
   let beatsPerBar = clamp(parseInt(els.beatsInput.value, 10), 1, 12);
@@ -217,11 +272,12 @@
       });
 
       if (latest.current) {
-        els.nowSymbol.textContent = latest.current.symbol;
+        els.nowIcon.innerHTML = latest.current.icon;
         els.nowName.textContent = latest.current.label;
       }
 
       if (latest.next) {
+        els.nextIcon.innerHTML = latest.next.icon;
         els.nextName.textContent = latest.next.label;
         els.nextBlock.classList.add("visible");
       } else {
@@ -244,7 +300,7 @@
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       masterGain = audioCtx.createGain();
-      masterGain.gain.value = parseFloat(els.volumeInput.value);
+      masterGain.gain.value = DEFAULT_CLICK_VOLUME;
       masterGain.connect(audioCtx.destination);
     }
     if (audioCtx.state === "suspended") audioCtx.resume();
@@ -269,7 +325,7 @@
     clearTimeout(schedulerId);
     els.playBtn.textContent = "▶ Start";
     els.playBtn.classList.remove("is-playing");
-    els.nowSymbol.textContent = "—";
+    els.nowIcon.innerHTML = "";
     els.nowName.textContent = "pronto";
     els.nextBlock.classList.remove("visible");
     [...els.barDots.children].forEach(dot => dot.classList.remove("active"));
@@ -338,10 +394,6 @@
   els.barsInput.addEventListener("change", () => {
     barsPerChange = parseInt(els.barsInput.value, 10);
     if (isPlaying) resetBlockState();
-  });
-
-  els.volumeInput.addEventListener("input", () => {
-    if (masterGain) masterGain.gain.value = parseFloat(els.volumeInput.value);
   });
 
 })();
