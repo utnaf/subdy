@@ -41,6 +41,14 @@ html, body {
   letter-spacing: 0.02em;
 }
 
+.app__version {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--text-dim);
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
 .app__tagline {
   margin: 4px 0 0;
   color: var(--text-dim);
@@ -55,6 +63,10 @@ html, body {
   text-align: center;
   color: var(--text-dim);
   font-size: 0.75rem;
+}
+
+.app__credit {
+  font-size: 0.7rem;
 }
 
 .display {
