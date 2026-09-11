@@ -310,7 +310,7 @@ import { clamp, buildNoteIcon, pickRandom, advanceBeatState } from "./logic.js";
     try {
       wakeLock = await navigator.wakeLock.request("screen");
       wakeLock.addEventListener("release", () => { wakeLock = null; });
-    } catch (err) {
+    } catch {
       wakeLock = null;
     }
   }
