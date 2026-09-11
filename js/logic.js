@@ -47,17 +47,7 @@ export function buildNoteIcon({ count, beams, tuplet }) {
 
   if (tuplet) {
     const midX = (stemX(xs[0]) + stemX(xs[xs.length - 1])) / 2;
-    if (beams > 0) {
-      svg += `<text x="${midX}" y="${beamTopY - 5}" font-size="14" text-anchor="middle" fill="currentColor" font-style="italic" font-family="Georgia, serif">${tuplet}</text>`;
-    } else {
-      const x1 = xs[0], x2 = xs[xs.length - 1];
-      const y = beamTopY;
-      svg += `<line x1="${x1}" y1="${y + 6}" x2="${x1}" y2="${y}" stroke="currentColor" stroke-width="1.6"/>`;
-      svg += `<line x1="${x1}" y1="${y}" x2="${midX - 7}" y2="${y}" stroke="currentColor" stroke-width="1.6"/>`;
-      svg += `<line x1="${midX + 7}" y1="${y}" x2="${x2}" y2="${y}" stroke="currentColor" stroke-width="1.6"/>`;
-      svg += `<line x1="${x2}" y1="${y}" x2="${x2}" y2="${y + 6}" stroke="currentColor" stroke-width="1.6"/>`;
-      svg += `<text x="${midX}" y="${y + 4}" font-size="12" text-anchor="middle" fill="currentColor" font-style="italic" font-family="Georgia, serif">${tuplet}</text>`;
-    }
+    svg += `<text x="${midX}" y="${beamTopY - 5}" font-size="14" text-anchor="middle" fill="currentColor" font-style="italic" font-family="Georgia, serif">${tuplet}</text>`;
   }
 
   svg += `</svg>`;
