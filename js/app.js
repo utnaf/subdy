@@ -135,7 +135,10 @@
   const stored = loadStoredSettings();
 
   if (stored) {
-    if (Number.isFinite(stored.bpm)) els.bpmInput.value = stored.bpm;
+    if (Number.isFinite(stored.bpm)) {
+      els.bpmInput.value = stored.bpm;
+      els.bpmRange.value = stored.bpm;
+    }
     if (Number.isFinite(stored.beatsPerBar)) els.beatsInput.value = stored.beatsPerBar;
     if (Number.isFinite(stored.barsPerChange) && [1, 2, 4, 8].includes(stored.barsPerChange)) {
       els.barsInput.value = String(stored.barsPerChange);
