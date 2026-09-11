@@ -27,7 +27,10 @@ export function buildNoteIcon({ count, beams, tuplet }) {
     ? [W / 2 - stemOffset]
     : Array.from({ length: count }, (_, i) => marginX + (i * (W - marginX * 2)) / (count - 1));
 
-  let svg = `<svg viewBox="0 0 ${W} ${H}" class="note-icon" aria-hidden="true">`;
+  // Extra room above the staff for the tuplet number, without moving the
+  // beam/notes — just reveals more canvas above y=0.
+  const topExtra = 10;
+  let svg = `<svg viewBox="0 -${topExtra} ${W} ${H + topExtra}" class="note-icon" aria-hidden="true">`;
 
   xs.forEach(x => {
     svg += `<line x1="${stemX(x)}" y1="${noteY - 2}" x2="${stemX(x)}" y2="${beamTopY}" stroke="currentColor" stroke-width="2.4" stroke-linecap="butt"/>`;
@@ -47,17 +50,7 @@ export function buildNoteIcon({ count, beams, tuplet }) {
 
   if (tuplet) {
     const midX = (stemX(xs[0]) + stemX(xs[xs.length - 1])) / 2;
-    if (beams > 0) {
-      svg += `<text x="${midX}" y="${beamTopY - 5}" font-size="14" text-anchor="middle" fill="currentColor" font-style="italic" font-family="Georgia, serif">${tuplet}</text>`;
-    } else {
-      const x1 = xs[0], x2 = xs[xs.length - 1];
-      const y = beamTopY;
-      svg += `<line x1="${x1}" y1="${y + 6}" x2="${x1}" y2="${y}" stroke="currentColor" stroke-width="1.6"/>`;
-      svg += `<line x1="${x1}" y1="${y}" x2="${midX - 7}" y2="${y}" stroke="currentColor" stroke-width="1.6"/>`;
-      svg += `<line x1="${midX + 7}" y1="${y}" x2="${x2}" y2="${y}" stroke="currentColor" stroke-width="1.6"/>`;
-      svg += `<line x1="${x2}" y1="${y}" x2="${x2}" y2="${y + 6}" stroke="currentColor" stroke-width="1.6"/>`;
-      svg += `<text x="${midX}" y="${y + 4}" font-size="12" text-anchor="middle" fill="currentColor" font-style="italic" font-family="Georgia, serif">${tuplet}</text>`;
-    }
+    svg += `<text x="${midX}" y="${beamTopY - 11}" font-size="14" text-anchor="middle" fill="currentColor" font-style="italic" font-family="Georgia, serif">${tuplet}</text>`;
   }
 
   svg += `</svg>`;
