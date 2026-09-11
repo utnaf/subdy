@@ -73,7 +73,12 @@
     return svg;
   }
 
-  SUBDIVISIONS.forEach(sub => { sub.icon = buildNoteIcon(sub.notation); });
+  SUBDIVISIONS.forEach(sub => {
+    sub.icon = buildNoteIcon(sub.notation);
+    // How many beats one full repeat of this subdivision spans — 1 for
+    // everything except quarter-note triplets (3 notes over 2 beats).
+    sub.cycleBeats = sub.notation.count / sub.perBeat;
+  });
 
   const els = {
     playBtn: document.getElementById("playBtn"),
@@ -94,6 +99,7 @@
     nextName: document.getElementById("nextName"),
     subdivisionsList: document.getElementById("subdivisionsList"),
     subdivisionsMeta: document.getElementById("subdivisionsMeta"),
+    subdivisionClickToggle: document.getElementById("subdivisionClickToggle"),
     hint: document.getElementById("hint"),
   };
 
@@ -119,6 +125,7 @@
         beatsPerBar,
         barsPerChange,
         subdivisions: [...enabled],
+        subdivisionClickEnabled,
       }));
     } catch {
       // localStorage unavailable (private mode, quota, ...) — non-fatal
@@ -134,6 +141,13 @@
       els.barsInput.value = String(stored.barsPerChange);
     }
   }
+
+  let subdivisionClickEnabled = !!(stored && stored.subdivisionClickEnabled);
+  els.subdivisionClickToggle.checked = subdivisionClickEnabled;
+  els.subdivisionClickToggle.addEventListener("change", () => {
+    subdivisionClickEnabled = els.subdivisionClickToggle.checked;
+    saveSettings();
+  });
 
   const storedSubdivisions = stored && Array.isArray(stored.subdivisions)
     ? stored.subdivisions.filter(id => SUBDIVISIONS.some(s => s.id === id))
@@ -259,7 +273,35 @@
       nextRevealed = true;
     }
 
-    playClick(time, isDownbeat);
+    // On the first bar of a block, optionally click the actual subdivision
+    // pattern as an audible reference instead of a plain quarter.
+    const isReferenceBar = subdivisionClickEnabled && barInBlock === 0 && currentTarget;
+    let playedPattern = false;
+
+    if (isReferenceBar) {
+      const cycleBeats = currentTarget.cycleBeats;
+      const cyclePos = beatInBar % cycleBeats;
+      if (cyclePos === 0) {
+        if (beatInBar + cycleBeats <= beatsPerBar) {
+          const secondsPerBeat = 60.0 / bpm;
+          const notes = currentTarget.notation.count;
+          const cycleDuration = cycleBeats * secondsPerBeat;
+          for (let i = 0; i < notes; i++) {
+            playClick(time + (i * cycleDuration) / notes, isDownbeat && i === 0);
+          }
+          playedPattern = true;
+        }
+        // else: leftover beat(s) too short for a full cycle — fall through
+        // to the plain click below.
+      } else {
+        // Mid-cycle beat, already covered by the cycle-start beat above.
+        playedPattern = true;
+      }
+    }
+
+    if (!playedPattern) {
+      playClick(time, isDownbeat);
+    }
 
     uiQueue.push({
       time,

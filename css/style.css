@@ -325,6 +325,16 @@ html, body {
   margin-top: 4px;
 }
 
+.subdivisions__audio-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
 .subdiv-tile {
   position: relative;
   display: flex;
