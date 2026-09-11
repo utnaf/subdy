@@ -37,7 +37,7 @@ describe("buildNoteIcon", () => {
   for (const { name, notation } of cases) {
     test(`${name}: produces valid SVG with no NaN`, () => {
       const svg = buildNoteIcon(notation);
-      assert.match(svg, /^<svg viewBox="0 0 120 64"/);
+      assert.match(svg, /^<svg viewBox="0 -10 120 74"/);
       assert.doesNotMatch(svg, /NaN/);
     });
 
