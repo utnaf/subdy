@@ -243,13 +243,20 @@
     return src[Math.floor(Math.random() * src.length)];
   }
 
-  function playClick(time, isDownbeat) {
+  const CLICK_SOUNDS = {
+    downbeat: { type: "square", freq: 1500, peak: 1 },
+    quarter: { type: "square", freq: 1000, peak: 1 },
+    subdivision: { type: "triangle", freq: 2200, peak: 0.6 },
+  };
+
+  function playClick(time, kind) {
+    const { type, freq, peak } = CLICK_SOUNDS[kind];
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-    osc.type = "square";
-    osc.frequency.value = isDownbeat ? 1500 : 1000;
+    osc.type = type;
+    osc.frequency.value = freq;
     gain.gain.setValueAtTime(0, time);
-    gain.gain.linearRampToValueAtTime(1, time + 0.002);
+    gain.gain.linearRampToValueAtTime(peak, time + 0.002);
     gain.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
     osc.connect(gain);
     gain.connect(masterGain);
@@ -273,34 +280,22 @@
       nextRevealed = true;
     }
 
-    // On the first bar of a block, optionally click the actual subdivision
-    // pattern as an audible reference instead of a plain quarter.
-    const isReferenceBar = subdivisionClickEnabled && barInBlock === 0 && currentTarget;
-    let playedPattern = false;
+    // The quarter pulse always plays, every beat.
+    playClick(time, isDownbeat ? "downbeat" : "quarter");
 
-    if (isReferenceBar) {
+    // On the first bar of a block, optionally layer the subdivision's own
+    // notes on top as an audible reference — skipping the note that lands
+    // on the beat itself, since the quarter click above already covers it.
+    if (subdivisionClickEnabled && barInBlock === 0 && currentTarget) {
       const cycleBeats = currentTarget.cycleBeats;
-      const cyclePos = beatInBar % cycleBeats;
-      if (cyclePos === 0) {
-        if (beatInBar + cycleBeats <= beatsPerBar) {
-          const secondsPerBeat = 60.0 / bpm;
-          const notes = currentTarget.notation.count;
-          const cycleDuration = cycleBeats * secondsPerBeat;
-          for (let i = 0; i < notes; i++) {
-            playClick(time + (i * cycleDuration) / notes, isDownbeat && i === 0);
-          }
-          playedPattern = true;
+      if (beatInBar % cycleBeats === 0 && beatInBar + cycleBeats <= beatsPerBar) {
+        const secondsPerBeat = 60.0 / bpm;
+        const notes = currentTarget.notation.count;
+        const cycleDuration = cycleBeats * secondsPerBeat;
+        for (let i = 1; i < notes; i++) {
+          playClick(time + (i * cycleDuration) / notes, "subdivision");
         }
-        // else: leftover beat(s) too short for a full cycle — fall through
-        // to the plain click below.
-      } else {
-        // Mid-cycle beat, already covered by the cycle-start beat above.
-        playedPattern = true;
       }
-    }
-
-    if (!playedPattern) {
-      playClick(time, isDownbeat);
     }
 
     uiQueue.push({

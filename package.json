@@ -1,6 +1,6 @@
 {
   "name": "subdy",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "private": true,
   "description": "Metronomo per allenare le suddivisioni ritmiche",
   "scripts": {
