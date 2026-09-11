@@ -326,11 +326,52 @@ import { clamp, buildNoteIcon, pickRandom, advanceBeatState } from "./logic.js";
     }
   });
 
+  // ---- One-time Buy Me a Coffee prompt after 30 min of actual practice ----
+
+  const PRACTICE_KEY = "subdy:practice";
+  const PRACTICE_THRESHOLD_MS = 30 * 60 * 1000;
+
+  function loadPracticeData() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(PRACTICE_KEY));
+      return {
+        ms: parsed && Number.isFinite(parsed.ms) ? parsed.ms : 0,
+        shown: !!(parsed && parsed.shown),
+      };
+    } catch {
+      return { ms: 0, shown: false };
+    }
+  }
+
+  function savePracticeData() {
+    try {
+      localStorage.setItem(PRACTICE_KEY, JSON.stringify(practiceData));
+    } catch {
+      // localStorage unavailable — non-fatal, prompt just won't persist
+    }
+  }
+
+  function showBmcPrompt() {
+    const card = document.createElement("div");
+    card.className = "bmc-prompt";
+    card.innerHTML = `
+      <button type="button" class="bmc-prompt__close" aria-label="Chiudi">×</button>
+      <p>Ciao! Ti rubo 1 minuto del tuo studio: ho costruito questo metronomo in primis per me stesso, e ho deciso di condividerlo con tutti quanti gratuitamente. Ma se ti piace e hai voglia di offrirmi una birra <a href="https://buymeacoffee.com/utnaf" target="_blank" rel="noopener">clicca pure qui</a>. Grazie e buono studio ;)</p>
+    `;
+    document.body.appendChild(card);
+    requestAnimationFrame(() => card.classList.add("bmc-prompt--visible"));
+    card.querySelector(".bmc-prompt__close").addEventListener("click", () => card.remove());
+  }
+
+  const practiceData = loadPracticeData();
+  let sessionStartedAt = null;
+
   function start() {
     if (isPlaying) return;
     if (!validateSelection()) return;
 
     window.scrollTo({ top: 0, behavior: "smooth" });
+    sessionStartedAt = Date.now();
 
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -367,6 +408,17 @@ import { clamp, buildNoteIcon, pickRandom, advanceBeatState } from "./logic.js";
     [...els.barDots.children].forEach(dot => dot.classList.remove("active"));
     uiQueue.length = 0;
     releaseWakeLock();
+
+    if (sessionStartedAt !== null) {
+      practiceData.ms += Date.now() - sessionStartedAt;
+      sessionStartedAt = null;
+      savePracticeData();
+      if (!practiceData.shown && practiceData.ms >= PRACTICE_THRESHOLD_MS) {
+        practiceData.shown = true;
+        savePracticeData();
+        showBmcPrompt();
+      }
+    }
   }
 
   function toggle() {

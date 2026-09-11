@@ -416,3 +416,54 @@ input[type="checkbox"] {
     color-scheme: light;
   }
 }
+
+.bmc-prompt {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%) translateY(12px);
+  width: calc(100% - 32px);
+  max-width: 460px;
+  background: var(--surface);
+  border: 1px solid var(--accent-strong);
+  border-radius: var(--radius);
+  padding: 16px 36px 16px 16px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  z-index: 100;
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.bmc-prompt--visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.bmc-prompt p {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.bmc-prompt a {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.bmc-prompt__close {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.bmc-prompt__close:hover {
+  color: var(--text);
+}
