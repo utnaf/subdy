@@ -326,11 +326,105 @@ import { clamp, buildNoteIcon, pickRandom, advanceBeatState } from "./logic.js";
     }
   });
 
+  // ---- One-time Buy Me a Coffee prompt after 30 min of actual practice ----
+
+  const PRACTICE_KEY = "subdy:practice";
+  const PRACTICE_THRESHOLD_MS = 30 * 60 * 1000;
+
+  function loadPracticeData() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(PRACTICE_KEY));
+      return {
+        ms: parsed && Number.isFinite(parsed.ms) ? parsed.ms : 0,
+        shown: !!(parsed && parsed.shown),
+      };
+    } catch {
+      return { ms: 0, shown: false };
+    }
+  }
+
+  function savePracticeData() {
+    try {
+      localStorage.setItem(PRACTICE_KEY, JSON.stringify(practiceData));
+    } catch {
+      // localStorage unavailable — non-fatal, prompt just won't persist
+    }
+  }
+
+  function showBmcPrompt() {
+    const overlay = document.createElement("div");
+    overlay.className = "bmc-overlay";
+    overlay.innerHTML = `
+      <div class="bmc-overlay__card">
+        <button type="button" class="bmc-overlay__close" aria-label="Chiudi">×</button>
+        <p>Ciao! Ti rubo un minuto del tuo studio.</p>
+        <p>Ho costruito questo metronomo <strong>in primis per me stesso</strong>, e ho deciso di condividerlo con tutti quanti gratuitamente.</p>
+        <p>Ma se ti piace e hai voglia di offrirmi una birra ti ringrazio!</p>
+        <p class="bmc-overlay__sign">— Davide</p>
+        <div class="bmc-overlay__actions">
+          <a class="bmc-overlay__cta" href="https://buymeacoffee.com/utnaf" target="_blank" rel="noopener">E fatti sta birra! 🍺</a>
+          <button type="button" class="bmc-overlay__decline">No, non chiedermelo più</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    document.body.classList.add("bmc-lock-scroll");
+    requestAnimationFrame(() => overlay.classList.add("bmc-overlay--visible"));
+
+    const close = () => {
+      overlay.remove();
+      document.body.classList.remove("bmc-lock-scroll");
+    };
+    overlay.querySelector(".bmc-overlay__close").addEventListener("click", close);
+    overlay.querySelector(".bmc-overlay__decline").addEventListener("click", close);
+    overlay.querySelector(".bmc-overlay__cta").addEventListener("click", close);
+    overlay.addEventListener("click", e => {
+      if (e.target === overlay) close();
+    });
+  }
+
+  const practiceData = loadPracticeData();
+  let sessionStartedAt = null;
+  let bmcCheckTimer = null;
+
+  function scheduleBmcCheck() {
+    if (practiceData.shown) return;
+    const remaining = PRACTICE_THRESHOLD_MS - practiceData.ms;
+    bmcCheckTimer = setTimeout(onPracticeThresholdReached, Math.max(0, remaining));
+  }
+
+  function clearBmcCheck() {
+    if (bmcCheckTimer) {
+      clearTimeout(bmcCheckTimer);
+      bmcCheckTimer = null;
+    }
+  }
+
+  function onPracticeThresholdReached() {
+    bmcCheckTimer = null;
+    if (sessionStartedAt !== null) {
+      practiceData.ms += Date.now() - sessionStartedAt;
+      sessionStartedAt = null;
+    }
+    practiceData.shown = true;
+    savePracticeData();
+    stop();
+    showBmcPrompt();
+  }
+
+  // Debug/testing only: ?bmc=1 shows the prompt immediately, bypassing the
+  // 30-minute threshold and the "already shown" flag.
+  if (new URLSearchParams(window.location.search).has("bmc")) {
+    showBmcPrompt();
+  }
+
   function start() {
     if (isPlaying) return;
     if (!validateSelection()) return;
 
     window.scrollTo({ top: 0, behavior: "smooth" });
+    sessionStartedAt = Date.now();
+    scheduleBmcCheck();
 
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -367,6 +461,13 @@ import { clamp, buildNoteIcon, pickRandom, advanceBeatState } from "./logic.js";
     [...els.barDots.children].forEach(dot => dot.classList.remove("active"));
     uiQueue.length = 0;
     releaseWakeLock();
+
+    clearBmcCheck();
+    if (sessionStartedAt !== null) {
+      practiceData.ms += Date.now() - sessionStartedAt;
+      sessionStartedAt = null;
+      savePracticeData();
+    }
   }
 
   function toggle() {
