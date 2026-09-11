@@ -22,6 +22,16 @@ npm run dev
 
 Then open `http://localhost:8000`.
 
+## Testing
+
+The pure logic (SVG icon generation, the beat/bar/block advance state machine, subdivision picking) lives in `js/logic.js`, separate from `js/app.js` — which handles the DOM, Web Audio, localStorage and Wake Lock — specifically so it can be unit tested without a browser:
+
+```bash
+npm test
+```
+
+Uses Node's built-in test runner (`node:test`), no extra dependency.
+
 ## Deploying to GitHub Pages
 
 Repo: https://github.com/utnaf/subdy

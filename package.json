@@ -1,10 +1,12 @@
 {
   "name": "subdy",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "private": true,
+  "type": "module",
   "description": "Metronomo per allenare le suddivisioni ritmiche",
   "scripts": {
-    "dev": "http-server -p 8000 -c-1"
+    "dev": "http-server -p 8000 -c-1",
+    "test": "node --test"
   },
   "devDependencies": {
     "http-server": "^14.1.1"
