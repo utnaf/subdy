@@ -352,19 +352,56 @@ import { clamp, buildNoteIcon, pickRandom, advanceBeatState } from "./logic.js";
   }
 
   function showBmcPrompt() {
-    const card = document.createElement("div");
-    card.className = "bmc-prompt";
-    card.innerHTML = `
-      <button type="button" class="bmc-prompt__close" aria-label="Chiudi">×</button>
-      <p>Ciao! Ti rubo 1 minuto del tuo studio: ho costruito questo metronomo in primis per me stesso, e ho deciso di condividerlo con tutti quanti gratuitamente. Ma se ti piace e hai voglia di offrirmi una birra <a href="https://buymeacoffee.com/utnaf" target="_blank" rel="noopener">clicca pure qui</a>. Grazie e buono studio ;)</p>
+    const overlay = document.createElement("div");
+    overlay.className = "bmc-overlay";
+    overlay.innerHTML = `
+      <div class="bmc-overlay__card">
+        <button type="button" class="bmc-overlay__close" aria-label="Chiudi">×</button>
+        <p>Ciao! Ti rubo 1 minuto del tuo studio: ho costruito questo metronomo in primis per me stesso, e ho deciso di condividerlo con tutti quanti gratuitamente. Ma se ti piace e hai voglia di offrirmi una birra <a href="https://buymeacoffee.com/utnaf" target="_blank" rel="noopener">clicca pure qui</a>. Grazie e buono studio ;)</p>
+      </div>
     `;
-    document.body.appendChild(card);
-    requestAnimationFrame(() => card.classList.add("bmc-prompt--visible"));
-    card.querySelector(".bmc-prompt__close").addEventListener("click", () => card.remove());
+    document.body.appendChild(overlay);
+    document.body.classList.add("bmc-lock-scroll");
+    requestAnimationFrame(() => overlay.classList.add("bmc-overlay--visible"));
+
+    const close = () => {
+      overlay.remove();
+      document.body.classList.remove("bmc-lock-scroll");
+    };
+    overlay.querySelector(".bmc-overlay__close").addEventListener("click", close);
+    overlay.addEventListener("click", e => {
+      if (e.target === overlay) close();
+    });
   }
 
   const practiceData = loadPracticeData();
   let sessionStartedAt = null;
+  let bmcCheckTimer = null;
+
+  function scheduleBmcCheck() {
+    if (practiceData.shown) return;
+    const remaining = PRACTICE_THRESHOLD_MS - practiceData.ms;
+    bmcCheckTimer = setTimeout(onPracticeThresholdReached, Math.max(0, remaining));
+  }
+
+  function clearBmcCheck() {
+    if (bmcCheckTimer) {
+      clearTimeout(bmcCheckTimer);
+      bmcCheckTimer = null;
+    }
+  }
+
+  function onPracticeThresholdReached() {
+    bmcCheckTimer = null;
+    if (sessionStartedAt !== null) {
+      practiceData.ms += Date.now() - sessionStartedAt;
+      sessionStartedAt = null;
+    }
+    practiceData.shown = true;
+    savePracticeData();
+    stop();
+    showBmcPrompt();
+  }
 
   // Debug/testing only: ?bmc=1 shows the prompt immediately, bypassing the
   // 30-minute threshold and the "already shown" flag.
@@ -378,6 +415,7 @@ import { clamp, buildNoteIcon, pickRandom, advanceBeatState } from "./logic.js";
 
     window.scrollTo({ top: 0, behavior: "smooth" });
     sessionStartedAt = Date.now();
+    scheduleBmcCheck();
 
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -415,15 +453,11 @@ import { clamp, buildNoteIcon, pickRandom, advanceBeatState } from "./logic.js";
     uiQueue.length = 0;
     releaseWakeLock();
 
+    clearBmcCheck();
     if (sessionStartedAt !== null) {
       practiceData.ms += Date.now() - sessionStartedAt;
       sessionStartedAt = null;
       savePracticeData();
-      if (!practiceData.shown && practiceData.ms >= PRACTICE_THRESHOLD_MS) {
-        practiceData.shown = true;
-        savePracticeData();
-        showBmcPrompt();
-      }
     }
   }
 

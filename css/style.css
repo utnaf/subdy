@@ -417,53 +417,69 @@ input[type="checkbox"] {
   }
 }
 
-.bmc-prompt {
+.bmc-lock-scroll {
+  overflow: hidden;
+}
+
+.bmc-overlay {
   position: fixed;
-  left: 50%;
-  bottom: 16px;
-  transform: translateX(-50%) translateY(12px);
-  width: calc(100% - 32px);
-  max-width: 460px;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(6, 7, 10, 0.8);
+  z-index: 200;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.bmc-overlay--visible {
+  opacity: 1;
+}
+
+.bmc-overlay__card {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
   background: var(--surface);
   border: 1px solid var(--accent-strong);
   border-radius: var(--radius);
-  padding: 16px 36px 16px 16px;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
-  z-index: 100;
-  opacity: 0;
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  padding: 28px 24px 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  transform: scale(0.94);
+  transition: transform 0.25s ease;
 }
 
-.bmc-prompt--visible {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
+.bmc-overlay--visible .bmc-overlay__card {
+  transform: scale(1);
 }
 
-.bmc-prompt p {
+.bmc-overlay__card p {
   margin: 0;
-  font-size: 0.85rem;
-  line-height: 1.5;
+  font-size: 0.95rem;
+  line-height: 1.6;
   color: var(--text);
 }
 
-.bmc-prompt a {
+.bmc-overlay__card a {
   color: var(--accent);
   font-weight: 600;
 }
 
-.bmc-prompt__close {
+.bmc-overlay__close {
   position: absolute;
-  top: 6px;
+  top: 8px;
   right: 10px;
   background: none;
   border: none;
   color: var(--text-dim);
-  font-size: 1.3rem;
+  font-size: 1.6rem;
   line-height: 1;
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
 }
 
-.bmc-prompt__close:hover {
+.bmc-overlay__close:hover {
   color: var(--text);
 }
