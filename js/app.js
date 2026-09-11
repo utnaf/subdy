@@ -357,7 +357,14 @@ import { clamp, buildNoteIcon, pickRandom, advanceBeatState } from "./logic.js";
     overlay.innerHTML = `
       <div class="bmc-overlay__card">
         <button type="button" class="bmc-overlay__close" aria-label="Chiudi">×</button>
-        <p>Ciao! Ti rubo 1 minuto del tuo studio: ho costruito questo metronomo in primis per me stesso, e ho deciso di condividerlo con tutti quanti gratuitamente. Ma se ti piace e hai voglia di offrirmi una birra <a href="https://buymeacoffee.com/utnaf" target="_blank" rel="noopener">clicca pure qui</a>. Grazie e buono studio ;)</p>
+        <p>Ciao! Ti rubo un minuto del tuo studio.</p>
+        <p>Ho costruito questo metronomo <strong>in primis per me stesso</strong>, e ho deciso di condividerlo con tutti quanti gratuitamente.</p>
+        <p>Ma se ti piace e hai voglia di offrirmi una birra ti ringrazio!</p>
+        <p class="bmc-overlay__sign">— Davide</p>
+        <div class="bmc-overlay__actions">
+          <a class="bmc-overlay__cta" href="https://buymeacoffee.com/utnaf" target="_blank" rel="noopener">E fatti sta birra! 🍺</a>
+          <button type="button" class="bmc-overlay__decline">No, non chiedermelo più</button>
+        </div>
       </div>
     `;
     document.body.appendChild(overlay);
@@ -369,6 +376,8 @@ import { clamp, buildNoteIcon, pickRandom, advanceBeatState } from "./logic.js";
       document.body.classList.remove("bmc-lock-scroll");
     };
     overlay.querySelector(".bmc-overlay__close").addEventListener("click", close);
+    overlay.querySelector(".bmc-overlay__decline").addEventListener("click", close);
+    overlay.querySelector(".bmc-overlay__cta").addEventListener("click", close);
     overlay.addEventListener("click", e => {
       if (e.target === overlay) close();
     });
