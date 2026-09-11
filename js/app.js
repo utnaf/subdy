@@ -366,6 +366,12 @@ import { clamp, buildNoteIcon, pickRandom, advanceBeatState } from "./logic.js";
   const practiceData = loadPracticeData();
   let sessionStartedAt = null;
 
+  // Debug/testing only: ?bmc=1 shows the prompt immediately, bypassing the
+  // 30-minute threshold and the "already shown" flag.
+  if (new URLSearchParams(window.location.search).has("bmc")) {
+    showBmcPrompt();
+  }
+
   function start() {
     if (isPlaying) return;
     if (!validateSelection()) return;
