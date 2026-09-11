@@ -3,6 +3,12 @@ import { clamp, buildNoteIcon, pickRandom, advanceBeatState } from "./logic.js";
 (() => {
   "use strict";
 
+  function track(name, params) {
+    if (typeof window.gtag === "function") {
+      window.gtag("event", name, params || {});
+    }
+  }
+
   const SUBDIVISIONS = [
     { id: "quarters", label: "Quarti", perBeat: 1, notation: { count: 1, beams: 0, tuplet: null } },
     { id: "quarter-triplets", label: "Terzine di quarti", perBeat: 1.5, notation: { count: 3, beams: 0, tuplet: 3 } },
@@ -370,16 +376,24 @@ import { clamp, buildNoteIcon, pickRandom, advanceBeatState } from "./logic.js";
     document.body.appendChild(overlay);
     document.body.classList.add("bmc-lock-scroll");
     requestAnimationFrame(() => overlay.classList.add("bmc-overlay--visible"));
+    track("bmc_prompt_shown");
 
     const close = () => {
       overlay.remove();
       document.body.classList.remove("bmc-lock-scroll");
     };
-    overlay.querySelector(".bmc-overlay__close").addEventListener("click", close);
-    overlay.querySelector(".bmc-overlay__decline").addEventListener("click", close);
-    overlay.querySelector(".bmc-overlay__cta").addEventListener("click", close);
+    const decline = () => {
+      track("bmc_declined");
+      close();
+    };
+    overlay.querySelector(".bmc-overlay__close").addEventListener("click", decline);
+    overlay.querySelector(".bmc-overlay__decline").addEventListener("click", decline);
+    overlay.querySelector(".bmc-overlay__cta").addEventListener("click", () => {
+      track("bmc_accepted");
+      close();
+    });
     overlay.addEventListener("click", e => {
-      if (e.target === overlay) close();
+      if (e.target === overlay) decline();
     });
   }
 
@@ -447,6 +461,14 @@ import { clamp, buildNoteIcon, pickRandom, advanceBeatState } from "./logic.js";
     els.playBtn.classList.add("is-playing");
     scheduler();
     requestWakeLock();
+
+    track("metronome_start", {
+      bpm,
+      beats_per_bar: beatsPerBar,
+      bars_per_change: barsPerChange,
+      subdivisions: [...enabled].join(","),
+      subdivision_click_enabled: subdivisionClickEnabled,
+    });
   }
 
   function stop() {
@@ -464,9 +486,11 @@ import { clamp, buildNoteIcon, pickRandom, advanceBeatState } from "./logic.js";
 
     clearBmcCheck();
     if (sessionStartedAt !== null) {
-      practiceData.ms += Date.now() - sessionStartedAt;
+      const elapsedMs = Date.now() - sessionStartedAt;
+      practiceData.ms += elapsedMs;
       sessionStartedAt = null;
       savePracticeData();
+      track("metronome_stop", { duration_seconds: Math.round(elapsedMs / 1000) });
     }
   }
 
@@ -510,7 +534,9 @@ import { clamp, buildNoteIcon, pickRandom, advanceBeatState } from "./logic.js";
       const intervals = [];
       for (let i = 1; i < tapTimes.length; i++) intervals.push(tapTimes[i] - tapTimes[i - 1]);
       const avg = intervals.reduce((a, b) => a + b, 0) / intervals.length;
-      setBpm(Math.round(60000 / avg));
+      const tappedBpm = Math.round(60000 / avg);
+      setBpm(tappedBpm);
+      track("tap_tempo_used", { bpm: tappedBpm });
     }
   });
 
