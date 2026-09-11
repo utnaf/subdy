@@ -330,6 +330,8 @@ import { clamp, buildNoteIcon, pickRandom, advanceBeatState } from "./logic.js";
     if (isPlaying) return;
     if (!validateSelection()) return;
 
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
     if (!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       masterGain = audioCtx.createGain();
