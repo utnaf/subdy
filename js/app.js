@@ -563,4 +563,156 @@ import { clamp, buildNoteIcon, pickRandom, advanceBeatState } from "./logic.js";
     saveSettings();
   });
 
+  // ---- Small dismissible banners (install / update), stacked bottom-of-screen ----
+
+  function getBannerContainer() {
+    let container = document.getElementById("pwaBanners");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "pwaBanners";
+      container.className = "pwa-banners";
+      document.body.appendChild(container);
+    }
+    return container;
+  }
+
+  function showBanner({ id, text, actionLabel, onAction, onClose }) {
+    if (document.getElementById(id)) return;
+
+    const bar = document.createElement("div");
+    bar.className = "pwa-banner";
+    bar.id = id;
+    bar.innerHTML = `
+      <span class="pwa-banner__text"></span>
+      ${actionLabel ? `<button type="button" class="pwa-banner__action"></button>` : ""}
+      <button type="button" class="pwa-banner__close" aria-label="Chiudi">×</button>
+    `;
+    bar.querySelector(".pwa-banner__text").textContent = text;
+    if (actionLabel) bar.querySelector(".pwa-banner__action").textContent = actionLabel;
+
+    getBannerContainer().appendChild(bar);
+    requestAnimationFrame(() => bar.classList.add("pwa-banner--visible"));
+
+    const dismiss = () => {
+      bar.classList.remove("pwa-banner--visible");
+      setTimeout(() => bar.remove(), 250);
+    };
+    bar.querySelector(".pwa-banner__close").addEventListener("click", () => {
+      onClose?.();
+      dismiss();
+    });
+    if (actionLabel) {
+      bar.querySelector(".pwa-banner__action").addEventListener("click", () => {
+        onAction();
+        dismiss();
+      });
+    }
+  }
+
+  // ---- "Install this app" banner ----
+
+  const INSTALL_DISMISS_KEY = "subdy:installBannerDismissed";
+  let deferredInstallPrompt = null;
+
+  function isStandalone() {
+    return window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  }
+
+  function isIos() {
+    return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+  }
+
+  function isInstallBannerDismissed() {
+    try {
+      return localStorage.getItem(INSTALL_DISMISS_KEY) === "1";
+    } catch {
+      return false;
+    }
+  }
+
+  function dismissInstallBannerForever() {
+    try {
+      localStorage.setItem(INSTALL_DISMISS_KEY, "1");
+    } catch {
+      // non-fatal — worst case the banner can reappear
+    }
+  }
+
+  function maybeShowInstallBanner() {
+    if (isStandalone() || isInstallBannerDismissed()) return;
+
+    if (deferredInstallPrompt) {
+      showBanner({
+        id: "installBanner",
+        text: "Installa subdy sul tuo dispositivo per un accesso più rapido.",
+        actionLabel: "Installa",
+        onAction: async () => {
+          const promptEvent = deferredInstallPrompt;
+          deferredInstallPrompt = null;
+          promptEvent.prompt();
+          const { outcome } = await promptEvent.userChoice;
+          track("pwa_install_prompt_outcome", { outcome });
+          dismissInstallBannerForever();
+        },
+        onClose: dismissInstallBannerForever,
+      });
+    } else if (isIos()) {
+      showBanner({
+        id: "installBanner",
+        text: 'Installa subdy: tocca "Condividi" e poi "Aggiungi alla schermata Home".',
+        onClose: dismissInstallBannerForever,
+      });
+    }
+  }
+
+  window.addEventListener("beforeinstallprompt", e => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    maybeShowInstallBanner();
+  });
+
+  window.addEventListener("appinstalled", () => {
+    track("pwa_installed");
+    deferredInstallPrompt = null;
+  });
+
+  if (isIos()) {
+    setTimeout(maybeShowInstallBanner, 4000);
+  }
+
+  // ---- "Update available" banner + service worker registration ----
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").then(reg => {
+        function promptUpdate(worker) {
+          showBanner({
+            id: "updateBanner",
+            text: "È disponibile una nuova versione di subdy.",
+            actionLabel: "Aggiorna",
+            onAction: () => worker.postMessage("SKIP_WAITING"),
+          });
+        }
+
+        if (reg.waiting) promptUpdate(reg.waiting);
+
+        reg.addEventListener("updatefound", () => {
+          const newWorker = reg.installing;
+          newWorker.addEventListener("statechange", () => {
+            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+              promptUpdate(newWorker);
+            }
+          });
+        });
+      });
+    });
+
+    let hasReloadedForUpdate = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (hasReloadedForUpdate) return;
+      hasReloadedForUpdate = true;
+      window.location.reload();
+    });
+  }
+
 })();
