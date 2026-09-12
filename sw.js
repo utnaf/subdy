@@ -14,7 +14,10 @@ self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(CORE_ASSETS))
   );
-  self.skipWaiting();
+  // No skipWaiting() here on purpose: the new worker waits until the page
+  // asks it to take over (see the "message" listener below), so we can
+  // show an "update available" banner instead of silently reloading
+  // mid-session.
 });
 
 self.addEventListener("activate", event => {
@@ -24,6 +27,12 @@ self.addEventListener("activate", event => {
     )
   );
   self.clients.claim();
+});
+
+self.addEventListener("message", event => {
+  if (event.data === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("fetch", event => {
