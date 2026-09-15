@@ -46,6 +46,7 @@ import { clamp, buildNoteIcon, pickFromBag, advanceBeatState } from "./logic.js"
     nowIcon: document.getElementById("nowIcon"),
     nowName: document.getElementById("nowName"),
     nextBlock: document.getElementById("nextBlock"),
+    nextLabel: document.getElementById("nextLabel"),
     nextIcon: document.getElementById("nextIcon"),
     nextName: document.getElementById("nextName"),
     subdivisionsList: document.getElementById("subdivisionsList"),
@@ -181,6 +182,7 @@ import { clamp, buildNoteIcon, pickFromBag, advanceBeatState } from "./logic.js"
   const LOOKAHEAD_MS = 25;
   const SCHEDULE_AHEAD_S = 0.12;
   const DEFAULT_CLICK_VOLUME = 0.6;
+  const PRECOUNT_BEATS = 4;
 
   let bpm = clamp(parseInt(els.bpmInput.value, 10), 30, 300);
   let beatsPerBar = clamp(parseInt(els.beatsInput.value, 10), 1, 12);
@@ -191,6 +193,9 @@ import { clamp, buildNoteIcon, pickFromBag, advanceBeatState } from "./logic.js"
   let currentTarget = null;
   let nextTarget = null;
   let nextRevealed = false;
+
+  let isPrecounting = false;
+  let precountBeatsLeft = 0;
 
   const uiQueue = [];
 
@@ -271,9 +276,33 @@ import { clamp, buildNoteIcon, pickFromBag, advanceBeatState } from "./logic.js"
     barInBlock = result.state.barInBlock;
   }
 
+  // A plain, fixed 4-count before the real metronome starts — unrelated to
+  // the beats-per-bar/subdivision machinery, just a "1, 2, 3, 4" lead-in.
+  // The first subdivision is already picked and shown as "ora" during it.
+  function schedulePrecountBeat(time) {
+    const i = PRECOUNT_BEATS - precountBeatsLeft;
+    const isDownbeat = i === 0;
+    playClick(time, isDownbeat ? "downbeat" : "quarter");
+    uiQueue.push({
+      time,
+      beatInBar: i,
+      beatsPerBar: PRECOUNT_BEATS,
+      isDownbeat,
+      current: nextTarget,
+      next: null,
+      precountNumber: i + 1,
+    });
+    precountBeatsLeft--;
+    if (precountBeatsLeft <= 0) isPrecounting = false;
+  }
+
   function scheduler() {
     while (nextNoteTime < audioCtx.currentTime + SCHEDULE_AHEAD_S) {
-      scheduleBeat(nextNoteTime);
+      if (isPrecounting) {
+        schedulePrecountBeat(nextNoteTime);
+      } else {
+        scheduleBeat(nextNoteTime);
+      }
       nextNoteTime += 60.0 / bpm;
     }
     schedulerId = setTimeout(scheduler, LOOKAHEAD_MS);
@@ -312,12 +341,24 @@ import { clamp, buildNoteIcon, pickFromBag, advanceBeatState } from "./logic.js"
         els.nowName.textContent = latest.current.label;
       }
 
-      if (latest.next) {
-        els.nextIcon.innerHTML = latest.next.icon;
-        els.nextName.textContent = latest.next.label;
-        els.nextBlock.classList.add("visible");
+      if (latest.precountNumber) {
+        els.nextBlock.classList.add("visible", "precounting");
+        els.nextLabel.textContent = "";
+        els.nextIcon.innerHTML = "";
+        els.nextName.textContent = String(latest.precountNumber);
+        els.nextName.classList.remove("precount-pop");
+        void els.nextName.offsetWidth; // restart the pop animation every tick
+        els.nextName.classList.add("precount-pop");
       } else {
-        els.nextBlock.classList.remove("visible");
+        els.nextBlock.classList.remove("precounting");
+        if (latest.next) {
+          els.nextLabel.textContent = "prossima";
+          els.nextIcon.innerHTML = latest.next.icon;
+          els.nextName.textContent = latest.next.label;
+          els.nextBlock.classList.add("visible");
+        } else {
+          els.nextBlock.classList.remove("visible");
+        }
       }
 
       if (latest.isDownbeat) {
@@ -473,9 +514,20 @@ import { clamp, buildNoteIcon, pickFromBag, advanceBeatState } from "./logic.js"
     beatInBar = 0;
     barInBlock = 0;
     currentTarget = null;
-    nextTarget = null;
-    nextRevealed = false;
     uiQueue.length = 0;
+
+    // Pre-pick the first subdivision now, before the count-in even starts,
+    // and seed it as the already-revealed "next" — the real scheduler's
+    // first beat will promote it via the normal advanceBeatState flow.
+    nextTarget = pickNext(null);
+    nextRevealed = true;
+    isPrecounting = true;
+    precountBeatsLeft = PRECOUNT_BEATS;
+
+    // Show it immediately rather than waiting for the render loop to catch
+    // up to the first precount click.
+    els.nowIcon.innerHTML = nextTarget.icon;
+    els.nowName.textContent = nextTarget.label;
 
     nextNoteTime = audioCtx.currentTime + 0.05;
     isPlaying = true;
@@ -496,12 +548,15 @@ import { clamp, buildNoteIcon, pickFromBag, advanceBeatState } from "./logic.js"
   function stop() {
     if (!isPlaying) return;
     isPlaying = false;
+    isPrecounting = false;
+    precountBeatsLeft = 0;
     clearTimeout(schedulerId);
     els.playBtnLabel.textContent = "▶ Start";
     els.playBtn.classList.remove("is-playing");
     els.nowIcon.innerHTML = "";
     els.nowName.textContent = "pronto";
-    els.nextBlock.classList.remove("visible");
+    els.nextBlock.classList.remove("visible", "precounting");
+    els.nextLabel.textContent = "prossima";
     [...els.barDots.children].forEach(dot => dot.classList.remove("active"));
     uiQueue.length = 0;
     releaseWakeLock();
