@@ -351,8 +351,8 @@ import { clamp, buildNoteIcon, pickFromBag, advanceBeatState } from "./logic.js"
         els.nextName.classList.add("precount-pop");
       } else {
         els.nextBlock.classList.remove("precounting");
-        els.nextLabel.textContent = "prossima";
         if (latest.next) {
+          els.nextLabel.textContent = "prossima";
           els.nextIcon.innerHTML = latest.next.icon;
           els.nextName.textContent = latest.next.label;
           els.nextBlock.classList.add("visible");
