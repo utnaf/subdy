@@ -1,4 +1,4 @@
-import { clamp, buildNoteIcon, pickRandom, advanceBeatState } from "./logic.js";
+import { clamp, buildNoteIcon, pickFromBag, advanceBeatState } from "./logic.js";
 
 (() => {
   "use strict";
@@ -182,8 +182,13 @@ import { clamp, buildNoteIcon, pickRandom, advanceBeatState } from "./logic.js";
 
   const uiQueue = [];
 
+  let subdivisionBag = [];
+
   function pickNext(avoidId) {
-    return pickRandom(SUBDIVISIONS.filter(s => enabled.has(s.id)), avoidId);
+    const pool = SUBDIVISIONS.filter(s => enabled.has(s.id));
+    const result = pickFromBag(pool, subdivisionBag, avoidId);
+    subdivisionBag = result.bag;
+    return result.picked;
   }
 
   const CLICK_SOUNDS = {

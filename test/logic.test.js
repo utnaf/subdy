@@ -1,6 +1,6 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { clamp, buildNoteIcon, pickRandom, advanceBeatState } from "../js/logic.js";
+import { clamp, buildNoteIcon, pickFromBag, advanceBeatState } from "../js/logic.js";
 
 describe("clamp", () => {
   test("passes values already in range through unchanged", () => {
@@ -80,34 +80,73 @@ describe("buildNoteIcon", () => {
   });
 });
 
-describe("pickRandom", () => {
+describe("pickFromBag", () => {
   test("returns null for an empty pool", () => {
-    assert.equal(pickRandom([], "x"), null);
+    const { picked, bag } = pickFromBag([], [], "x");
+    assert.equal(picked, null);
+    assert.deepEqual(bag, []);
   });
 
   test("returns the only item even if it's the one to avoid", () => {
     const only = { id: "a" };
-    assert.equal(pickRandom([only], "a"), only);
+    const { picked, bag } = pickFromBag([only], [], "a");
+    assert.equal(picked, only);
+    assert.deepEqual(bag, []);
   });
 
-  test("never returns the avoided id when alternatives exist", () => {
-    const pool = [{ id: "a" }, { id: "b" }, { id: "c" }];
-    for (let i = 0; i < 200; i++) {
-      const picked = pickRandom(pool, "a");
-      assert.notEqual(picked.id, "a");
+  test("a full cycle covers every pool item exactly once", () => {
+    const pool = [{ id: "a" }, { id: "b" }, { id: "c" }, { id: "d" }, { id: "e" }];
+    let bag = [];
+    let avoidId = null;
+    const seen = [];
+    for (let i = 0; i < pool.length; i++) {
+      const result = pickFromBag(pool, bag, avoidId);
+      seen.push(result.picked.id);
+      bag = result.bag;
+      avoidId = result.picked.id;
+    }
+    assert.deepEqual(seen.slice().sort(), ["a", "b", "c", "d", "e"]);
+  });
+
+  test("covers every pool item exactly once on every subsequent cycle too", () => {
+    const pool = [{ id: "a" }, { id: "b" }, { id: "c" }, { id: "d" }];
+    let bag = [];
+    let avoidId = null;
+    for (let cycle = 0; cycle < 5; cycle++) {
+      const seen = [];
+      for (let i = 0; i < pool.length; i++) {
+        const result = pickFromBag(pool, bag, avoidId);
+        seen.push(result.picked.id);
+        bag = result.bag;
+        avoidId = result.picked.id;
+      }
+      assert.deepEqual(seen.slice().sort(), ["a", "b", "c", "d"], `cycle ${cycle}`);
     }
   });
 
-  test("can return any item when nothing needs avoiding", () => {
+  test("never immediately repeats the previous pick, even across a bag boundary", () => {
+    const pool = [{ id: "a" }, { id: "b" }, { id: "c" }];
+    let bag = [];
+    let avoidId = null;
+    for (let trial = 0; trial < 500; trial++) {
+      const result = pickFromBag(pool, bag, avoidId);
+      if (avoidId !== null) assert.notEqual(result.picked.id, avoidId);
+      bag = result.bag;
+      avoidId = result.picked.id;
+    }
+  });
+
+  test("drops stale bag entries no longer in the pool", () => {
     const pool = [{ id: "a" }, { id: "b" }];
-    const seen = new Set();
-    for (let i = 0; i < 200; i++) seen.add(pickRandom(pool, "z").id);
-    assert.deepEqual([...seen].sort(), ["a", "b"]);
+    const staleBag = ["b", "removed-id"];
+    const { picked, bag } = pickFromBag(pool, staleBag, "a");
+    assert.equal(picked.id, "b");
+    assert.deepEqual(bag, []);
   });
 });
 
 describe("advanceBeatState", () => {
-  // Deterministic stand-in for pickRandom: hands out A, B, C, A, B, C, ...
+  // Deterministic stand-in for a subdivision picker: hands out A, B, C, A, B, C, ...
   function sequencePicker(ids) {
     let i = 0;
     return () => ({ id: ids[i++ % ids.length] });
