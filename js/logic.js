@@ -57,14 +57,50 @@ export function buildNoteIcon({ count, beams, tuplet }) {
   return svg;
 }
 
-// ---- Random subdivision pick, avoiding immediate repeats when possible ----
+// ---- Shuffle-bag subdivision picker ----
+//
+// Pure random picking (even with "never immediately repeat") still lets one
+// item show up far more often than the others over a short session, just by
+// chance — which reads as "broken" even though it's working as designed.
+//
+// A shuffle bag fixes that: shuffle every pool item into a bag, hand them
+// out one at a time with no replacement, and reshuffle a fresh bag once
+// it's empty. That guarantees every item appears exactly once per full
+// cycle through the pool, with no possible skew.
 
-export function pickRandom(pool, avoidId) {
-  if (pool.length === 0) return null;
-  if (pool.length === 1) return pool[0];
-  const filtered = pool.filter(s => s.id !== avoidId);
-  const src = filtered.length ? filtered : pool;
-  return src[Math.floor(Math.random() * src.length)];
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// `bag` is an array of subdivision ids (the state to carry into the next
+// call — same pattern as advanceBeatState). Returns { picked, bag }.
+export function pickFromBag(pool, bag, avoidId) {
+  if (pool.length === 0) return { picked: null, bag: [] };
+  if (pool.length === 1) return { picked: pool[0], bag: [] };
+
+  // Drop any leftover ids that are no longer in the pool (selection changed
+  // since the bag was filled).
+  let remaining = bag.filter(id => pool.some(s => s.id === id));
+
+  if (remaining.length === 0) {
+    remaining = shuffle(pool.map(s => s.id));
+    // Avoid an immediate repeat right at the bag boundary — the previous
+    // pick was the last item of the old bag, so the new bag's first slot
+    // could coincidentally land on the same id.
+    if (remaining[0] === avoidId) {
+      const swapIndex = 1 + Math.floor(Math.random() * (remaining.length - 1));
+      [remaining[0], remaining[swapIndex]] = [remaining[swapIndex], remaining[0]];
+    }
+  }
+
+  const pickedId = remaining[0];
+  const newBag = remaining.slice(1);
+  return { picked: pool.find(s => s.id === pickedId), bag: newBag };
 }
 
 // ---- Beat / bar / block advance state machine ----
