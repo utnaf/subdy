@@ -22,6 +22,7 @@ import { clamp, buildNoteIcon, pickFromBag, advanceBeatState } from "./logic.js"
   ];
 
   const DEFAULT_ENABLED = ["quarters", "eighths", "sixteenths"];
+  const CLICK_MODES = ["never", "firstBar", "always"];
 
   SUBDIVISIONS.forEach(sub => {
     sub.icon = buildNoteIcon(sub.notation);
@@ -49,7 +50,7 @@ import { clamp, buildNoteIcon, pickFromBag, advanceBeatState } from "./logic.js"
     nextName: document.getElementById("nextName"),
     subdivisionsList: document.getElementById("subdivisionsList"),
     subdivisionsMeta: document.getElementById("subdivisionsMeta"),
-    subdivisionClickToggle: document.getElementById("subdivisionClickToggle"),
+    subdivisionClickMode: document.getElementById("subdivisionClickMode"),
     hint: document.getElementById("hint"),
   };
 
@@ -75,7 +76,7 @@ import { clamp, buildNoteIcon, pickFromBag, advanceBeatState } from "./logic.js"
         beatsPerBar,
         barsPerChange,
         subdivisions: [...enabled],
-        subdivisionClickEnabled,
+        subdivisionClickMode,
       }));
     } catch {
       // localStorage unavailable (private mode, quota, ...) — non-fatal
@@ -95,10 +96,21 @@ import { clamp, buildNoteIcon, pickFromBag, advanceBeatState } from "./logic.js"
     }
   }
 
-  let subdivisionClickEnabled = !!(stored && stored.subdivisionClickEnabled);
-  els.subdivisionClickToggle.checked = subdivisionClickEnabled;
-  els.subdivisionClickToggle.addEventListener("change", () => {
-    subdivisionClickEnabled = els.subdivisionClickToggle.checked;
+  function resolveStoredClickMode() {
+    if (stored && CLICK_MODES.includes(stored.subdivisionClickMode)) {
+      return stored.subdivisionClickMode;
+    }
+    // Migrate the old boolean toggle (pre-three-way-mode).
+    if (stored && typeof stored.subdivisionClickEnabled === "boolean") {
+      return stored.subdivisionClickEnabled ? "firstBar" : "never";
+    }
+    return "never";
+  }
+
+  let subdivisionClickMode = resolveStoredClickMode();
+  els.subdivisionClickMode.value = subdivisionClickMode;
+  els.subdivisionClickMode.addEventListener("change", () => {
+    subdivisionClickMode = els.subdivisionClickMode.value;
     saveSettings();
   });
 
@@ -226,10 +238,15 @@ import { clamp, buildNoteIcon, pickFromBag, advanceBeatState } from "./logic.js"
     // The quarter pulse always plays, every beat.
     playClick(time, isDownbeat ? "downbeat" : "quarter");
 
-    // On the first bar of a block, optionally layer the subdivision's own
-    // notes on top as an audible reference — skipping the note that lands
-    // on the beat itself, since the quarter click above already covers it.
-    if (subdivisionClickEnabled && barInBlock === 0 && currentTarget) {
+    // Optionally layer the subdivision's own notes on top as an audible
+    // reference — either every bar, or just the first bar of each block —
+    // skipping the note that lands on the beat itself, since the quarter
+    // click above already covers it.
+    const playsSubdivisionThisBar =
+      subdivisionClickMode === "always" ||
+      (subdivisionClickMode === "firstBar" && barInBlock === 0);
+
+    if (playsSubdivisionThisBar && currentTarget) {
       const cycleBeats = currentTarget.cycleBeats;
       if (beatInBar % cycleBeats === 0 && beatInBar + cycleBeats <= beatsPerBar) {
         const secondsPerBeat = 60.0 / bpm;
@@ -472,7 +489,7 @@ import { clamp, buildNoteIcon, pickFromBag, advanceBeatState } from "./logic.js"
       beats_per_bar: beatsPerBar,
       bars_per_change: barsPerChange,
       subdivisions: [...enabled].join(","),
-      subdivision_click_enabled: subdivisionClickEnabled,
+      subdivision_click_mode: subdivisionClickMode,
     });
   }
 
