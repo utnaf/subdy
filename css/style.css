@@ -138,7 +138,9 @@ html, body {
 }
 
 .display__icon--now {
-  min-height: 80px;
+  /* Icons render at 150px wide with a 120:74 viewBox aspect ratio, so
+     their real height is ~92.5px — reserve enough to match exactly. */
+  min-height: 93px;
 }
 
 .display__icon--now svg {
@@ -147,7 +149,8 @@ html, body {
 }
 
 .display__icon--next {
-  min-height: 48px;
+  /* 90px wide at the same 120:74 aspect ratio -> ~55.5px real height. */
+  min-height: 56px;
   color: var(--accent);
 }
 
@@ -165,8 +168,9 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 2px;
-  min-height: 44px;
+  min-height: 110px;
   opacity: 0;
   transition: opacity 0.2s ease;
 }
@@ -179,6 +183,11 @@ html, body {
   font-size: 1.1rem;
   font-weight: 500;
   color: var(--accent);
+}
+
+.display__next.precounting .display__icon--next,
+.display__next.precounting .display__label {
+  display: none;
 }
 
 .display__next.precounting .display__name {
