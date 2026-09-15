@@ -328,11 +328,23 @@ html, body {
 .subdivisions__audio-toggle {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   margin-top: 12px;
+}
+
+.subdivisions__audio-toggle label {
   font-size: 0.8rem;
   color: var(--text-dim);
-  cursor: pointer;
+}
+
+.subdivisions__audio-toggle select {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 0.8rem;
 }
 
 .subdiv-tile {
