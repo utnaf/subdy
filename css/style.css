@@ -181,6 +181,23 @@ html, body {
   color: var(--accent);
 }
 
+.display__next.precounting .display__name {
+  font-size: 2.6rem;
+  font-weight: 700;
+  color: var(--accent-strong);
+  line-height: 1;
+}
+
+@keyframes precount-pop {
+  0% { transform: scale(0.6); opacity: 0.3; }
+  60% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.precount-pop {
+  animation: precount-pop 0.25s ease-out;
+}
+
 .transport {
   display: flex;
   gap: 10px;

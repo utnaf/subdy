@@ -46,6 +46,7 @@ import { clamp, buildNoteIcon, pickFromBag, advanceBeatState } from "./logic.js"
     nowIcon: document.getElementById("nowIcon"),
     nowName: document.getElementById("nowName"),
     nextBlock: document.getElementById("nextBlock"),
+    nextLabel: document.getElementById("nextLabel"),
     nextIcon: document.getElementById("nextIcon"),
     nextName: document.getElementById("nextName"),
     subdivisionsList: document.getElementById("subdivisionsList"),
@@ -289,6 +290,7 @@ import { clamp, buildNoteIcon, pickFromBag, advanceBeatState } from "./logic.js"
       isDownbeat,
       current: nextTarget,
       next: null,
+      precountNumber: i + 1,
     });
     precountBeatsLeft--;
     if (precountBeatsLeft <= 0) isPrecounting = false;
@@ -339,12 +341,24 @@ import { clamp, buildNoteIcon, pickFromBag, advanceBeatState } from "./logic.js"
         els.nowName.textContent = latest.current.label;
       }
 
-      if (latest.next) {
-        els.nextIcon.innerHTML = latest.next.icon;
-        els.nextName.textContent = latest.next.label;
-        els.nextBlock.classList.add("visible");
+      if (latest.precountNumber) {
+        els.nextBlock.classList.add("visible", "precounting");
+        els.nextLabel.textContent = "";
+        els.nextIcon.innerHTML = "";
+        els.nextName.textContent = String(latest.precountNumber);
+        els.nextName.classList.remove("precount-pop");
+        void els.nextName.offsetWidth; // restart the pop animation every tick
+        els.nextName.classList.add("precount-pop");
       } else {
-        els.nextBlock.classList.remove("visible");
+        els.nextBlock.classList.remove("precounting");
+        els.nextLabel.textContent = "prossima";
+        if (latest.next) {
+          els.nextIcon.innerHTML = latest.next.icon;
+          els.nextName.textContent = latest.next.label;
+          els.nextBlock.classList.add("visible");
+        } else {
+          els.nextBlock.classList.remove("visible");
+        }
       }
 
       if (latest.isDownbeat) {
@@ -541,7 +555,8 @@ import { clamp, buildNoteIcon, pickFromBag, advanceBeatState } from "./logic.js"
     els.playBtn.classList.remove("is-playing");
     els.nowIcon.innerHTML = "";
     els.nowName.textContent = "pronto";
-    els.nextBlock.classList.remove("visible");
+    els.nextBlock.classList.remove("visible", "precounting");
+    els.nextLabel.textContent = "prossima";
     [...els.barDots.children].forEach(dot => dot.classList.remove("active"));
     uiQueue.length = 0;
     releaseWakeLock();
